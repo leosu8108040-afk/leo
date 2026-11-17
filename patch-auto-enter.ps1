@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 
 function Replace-Once([string]$Path, [string]$Old, [string]$New) {
   $text = [System.IO.File]::ReadAllText($Path, [System.Text.Encoding]::UTF8).Replace("`r`n", "`n")
-  if (-not $text.Contains($Old)) { throw "Expected source text not found in $Path" }
+  if (-not $text.Contains($Old)) { throw "Expected source text not found in $Path. Pattern=[$Old]" }
   $text = $text.Replace($Old, $New)
   [System.IO.File]::WriteAllText($Path, $text, [System.Text.UTF8Encoding]::new($false))
 }
