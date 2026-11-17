@@ -25,7 +25,45 @@ Replace-Once $browser '        int slot,' @'
 '@
 Replace-Once $browser '        this.slot = slot;' @'
         this.slot = slot;
+'@
+Replace-Once $browser '        this.autoEnterCharacter = autoEnterCharacter;' @'
         this.autoEnterCharacter = autoEnterCharacter;
+'@
+Replace-Once $browser '        await browser.EnsureCoreWebView2Async(environment);' @'
+        await browser.EnsureCoreWebView2Async(environment);
+        if (autoEnterCharacter && startUri.Host.EndsWith("ro-idle.app", StringComparison.OrdinalIgnoreCase) && slot >= 1 && slot <= 4)
+        {
+            var slotJson = System.Text.Json.JsonSerializer.Serialize(slot);
+            var script = $"""
+                (() => {
+                  if (window.__mbgmAutoEnterInstalled) return;
+                  window.__mbgmAutoEnterInstalled = true;
+                  const targetIndex = {{slotJson}} - 1;
+                  let finished = false;
+                  const startedAt = Date.now();
+                  const tryEnter = () => {
+                    if (finished || Date.now() - startedAt > 300000) return;
+                    const candidates = Array.from(document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"]'));
+                    const enterButtons = candidates.filter(el => {
+                      const text = (el.innerText || el.value || el.getAttribute('aria-label') || '').replace(/\\s+/g, '').trim();
+                      const rect = el.getBoundingClientRect();
+                      const style = window.getComputedStyle(el);
+                      return text === '進入' && rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && !el.disabled;
+                    });
+                    if (enterButtons.length > targetIndex) { finished = true; enterButtons[targetIndex].click(); }
+                  };
+                  const observer = new MutationObserver(tryEnter);
+                  observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
+                  const timer = window.setInterval(() => {
+                    tryEnter();
+                    if (finished || Date.now() - startedAt > 300000) { window.clearInterval(timer); observer.disconnect(); }
+                  }, 1000);
+                  tryEnter();
+                })();
+                """;
+            await browser.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(script);
+        }
+        browser.CoreWebView2.Navigate(startUri.ToString());
 '@
 
 $manager = Join-Path $ProjectDir 'ManagerForm.cs'
