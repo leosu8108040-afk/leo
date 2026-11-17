@@ -20,20 +20,15 @@ Replace-Once $browser '    private readonly int slot;' @'
     private readonly int slot;
     private readonly bool autoEnterCharacter;
 '@
-Replace-Once $browser '        int slot,
-        SlotWindowSettings? placement,' @'
+Replace-Once $browser '        int slot,' @'
         int slot,
         bool autoEnterCharacter,
-        SlotWindowSettings? placement,
 '@
-Replace-Once $browser '        this.slot = slot;
-        this.savePlacement = savePlacement;' @'
+Replace-Once $browser '        this.slot = slot;' @'
         this.slot = slot;
         this.autoEnterCharacter = autoEnterCharacter;
-        this.savePlacement = savePlacement;
 '@
-Replace-Once $browser '        await browser.EnsureCoreWebView2Async(environment);
-        browser.CoreWebView2.Navigate(startUri.ToString());' @'
+Replace-Once $browser '        await browser.EnsureCoreWebView2Async(environment);' @'
         await browser.EnsureCoreWebView2Async(environment);
         if (autoEnterCharacter && startUri.Host.EndsWith("ro-idle.app", StringComparison.OrdinalIgnoreCase))
         {
@@ -92,11 +87,9 @@ Replace-Once $manager '        AddButton(top, "全部關閉", StopAll);' @'
         autoEnterCheck.CheckedChanged += (_, _) => { settings.AutoEnterCharacterBySlot = autoEnterCheck.Checked; SaveSettings(); };
         top.Controls.Add(autoEnterCheck);
 '@
-Replace-Once $manager '                var form = new BrowserForm($"組別 {group.Name} - {slotName}", uri, env, id, slot,
-                    placement,' @'
+Replace-Once $manager '                var form = new BrowserForm($"組別 {group.Name} - {slotName}", uri, env, id, slot,' @'
                 var form = new BrowserForm($"組別 {group.Name} - {slotName}", uri, env, id, slot,
-                    settings.AutoEnterCharacterBySlot, placement,
-'@
+                    settings.AutoEnterCharacterBySlot,'@
 Replace-Once $manager '        settings.StartUrl = urlBox.Text.Trim();' @'
         settings.StartUrl = urlBox.Text.Trim();
         settings.AutoEnterCharacterBySlot = autoEnterCheck.Checked;
