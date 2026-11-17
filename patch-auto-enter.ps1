@@ -25,6 +25,7 @@ Replace-Once $browser '        int slot,' @'
 '@
 Replace-Once $browser '        this.slot = slot;' @'
         this.slot = slot;
+        this.autoEnterCharacter = autoEnterCharacter;
 '@
 Replace-Once $browser '        await browser.EnsureCoreWebView2Async(environment);' @'
         await browser.EnsureCoreWebView2Async(environment);
