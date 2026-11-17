@@ -41,12 +41,12 @@ Replace-Once $browser '        await browser.EnsureCoreWebView2Async(environment
                   const startedAt = Date.now();
                   const tryEnter = () => {
                     if (finished || Date.now() - startedAt > 300000) return;
-                    const candidates = Array.from(document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"]'));
+                    const candidates = Array.from(document.querySelectorAll('button, a, [role="button"], [onclick], input[type="button"], input[type="submit"]'));
                     const enterButtons = candidates.filter(el => {
-                      const text = (el.innerText || el.value || el.getAttribute('aria-label') || '').replace(/\s+/g, '').trim();
+                      const text = (el.innerText || el.textContent || el.value || el.getAttribute('aria-label') || el.getAttribute('title') || '').replace(/\\s+/g, '').trim();
                       const rect = el.getBoundingClientRect();
                       const style = window.getComputedStyle(el);
-                      return text === '進入' && rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && !el.disabled;
+                      return text === '進入' && rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0' && !el.disabled && el.getAttribute('aria-disabled') !== 'true';
                     });
                     if (enterButtons.length > targetIndex) { finished = true; enterButtons[targetIndex].click(); }
                   };
@@ -60,6 +60,13 @@ Replace-Once $browser '        await browser.EnsureCoreWebView2Async(environment
                 })();
                 """;
             await browser.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(script);
+            // Also install on the already-loaded document and after each navigation.
+            await browser.CoreWebView2.ExecuteScriptAsync(script);
+            browser.CoreWebView2.NavigationCompleted += async (_, _) =>
+            {
+                try { await browser.CoreWebView2.ExecuteScriptAsync(script); }
+                catch { /* Navigation may have been replaced while the script was being installed. */ }
+            };
         }
 '@
 
