@@ -74,16 +74,11 @@ Replace-Once $manager '        AddButton(top, "全部關閉", StopAll);' @'
         autoEnterCheck.CheckedChanged += (_, _) => { settings.AutoEnterCharacterBySlot = autoEnterCheck.Checked; SaveSettings(); };
         top.Controls.Add(autoEnterCheck);
 '@
-$oldCall = @'
+Replace-Once $manager '                var form = new BrowserForm($"組別 {group.Name} - {slotName}", uri, env, id, slot,' @'
                 var form = new BrowserForm($"組別 {group.Name} - {slotName}", uri, env, id, slot,
-                    placement, (slotNumber, bounds, maximized) => SaveWindowPlacement(id, slotNumber, bounds, maximized));
+                    settings.AutoEnterCharacterBySlot,
 '@
-$newCall = @'
-                var form = new BrowserForm($"組別 {group.Name} - {slotName}", uri, env, id, slot,
-                    settings.AutoEnterCharacterBySlot, placement,
-                    (slotNumber, bounds, maximized) => SaveWindowPlacement(id, slotNumber, bounds, maximized));
-'@
-Replace-Once $manager $oldCall $newCall
+
 Replace-Once $manager '        settings.StartUrl = urlBox.Text.Trim();' @'
         settings.StartUrl = urlBox.Text.Trim();
         settings.AutoEnterCharacterBySlot = autoEnterCheck.Checked;
