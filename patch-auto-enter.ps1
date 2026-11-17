@@ -60,7 +60,6 @@ Replace-Once $browser '        await browser.EnsureCoreWebView2Async(environment
                 """;
             await browser.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(script);
         }
-        browser.CoreWebView2.Navigate(startUri.ToString());
 '@
 
 $manager = Join-Path $ProjectDir 'ManagerForm.cs'
