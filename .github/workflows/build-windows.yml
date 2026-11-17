@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - 'MiniGameBrowser_GroupManager_v8_CloudBuild.zip'
+      - 'patch-auto-enter.ps1'
       - '.github/workflows/build-windows.yml'
 
 permissions:
@@ -29,6 +30,10 @@ jobs:
           $project = Get-ChildItem -Path source -Filter MiniGameBrowserGroupManager.csproj -Recurse | Select-Object -First 1
           if (-not $project) { throw 'Could not find MiniGameBrowserGroupManager.csproj in the ZIP.' }
           "PROJECT_DIR=$($project.Directory.FullName)" >> $env:GITHUB_ENV
+
+      - name: Apply automatic character entry feature
+        shell: pwsh
+        run: ./patch-auto-enter.ps1 -ProjectDir "$env:PROJECT_DIR"
 
       - name: Install .NET 8 SDK
         uses: actions/setup-dotnet@v4
@@ -57,6 +62,7 @@ jobs:
           MiniGameBrowser Group Manager
           Windows x64 self-contained build.
           Microsoft Edge WebView2 Evergreen Runtime is required.
+          Automatic character entry: browser window 1 selects the first visible Enter button, window 2 the second, and so on.
           This is an independent group-manager prototype, not the original vendor application.
           '@ | Set-Content "$env:GITHUB_WORKSPACE/artifacts/publish/使用說明.txt" -Encoding utf8
 
