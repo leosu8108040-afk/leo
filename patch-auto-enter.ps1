@@ -42,7 +42,7 @@ Replace-Once $browser '        await browser.EnsureCoreWebView2Async(environment
                     if (finished || Date.now() - startedAt > 300000) return;
                     const candidates = Array.from(document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"]'));
                     const enterButtons = candidates.filter(el => {
-                      const text = (el.innerText || el.value || el.getAttribute('aria-label') || '').replace(/\\s+/g, '').trim();
+                      const text = (el.innerText || el.value || el.getAttribute('aria-label') || '').replace(/\s+/g, '').trim();
                       const rect = el.getBoundingClientRect();
                       const style = window.getComputedStyle(el);
                       return text === '進入' && rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && !el.disabled;
