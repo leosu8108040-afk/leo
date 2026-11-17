@@ -48,6 +48,9 @@ jobs:
           $file = Join-Path $env:PROJECT_DIR 'ManagerForm.cs'
           $lines = Get-Content $file
           for ($i = 410; $i -lt [Math]::Min(445, $lines.Length); $i++) { '{0}: {1}' -f ($i + 1), $lines[$i] }
+          $browser = Join-Path $env:PROJECT_DIR 'BrowserForm.cs'
+          $b = Get-Content $browser
+          for ($i = 65; $i -lt [Math]::Min(120, $b.Length); $i++) { '{0}: {1}' -f ($i + 1), $b[$i] }
 
       - name: Install .NET 8 SDK
         uses: actions/setup-dotnet@v4
