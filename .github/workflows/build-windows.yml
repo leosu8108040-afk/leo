@@ -42,6 +42,13 @@ jobs:
         shell: pwsh
         run: ./patch-auto-enter.ps1 -ProjectDir "$env:PROJECT_DIR"
 
+      - name: Inspect patched source
+        shell: pwsh
+        run: |
+          $file = Join-Path $env:PROJECT_DIR 'ManagerForm.cs'
+          $lines = Get-Content $file
+          for ($i = 410; $i -lt [Math]::Min(445, $lines.Length); $i++) { '{0}: {1}' -f ($i + 1), $lines[$i] }
+
       - name: Install .NET 8 SDK
         uses: actions/setup-dotnet@v4
         with:
