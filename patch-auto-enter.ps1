@@ -31,7 +31,7 @@ Replace-Once $browser '        await browser.EnsureCoreWebView2Async(environment
         if (autoEnterCharacter && startUri.Host.EndsWith("ro-idle.app", StringComparison.OrdinalIgnoreCase) && slot >= 1 && slot <= 4)
         {
             var slotJson = System.Text.Json.JsonSerializer.Serialize(slot);
-            var script = $"""
+            var script = $$"""
                 (() => {
                   if (window.__mbgmAutoEnterInstalled) return;
                   window.__mbgmAutoEnterInstalled = true;
