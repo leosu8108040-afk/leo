@@ -80,6 +80,12 @@ Replace-Once $manager '        AddButton(top, "全部關閉", StopAll);' @'
         autoEnterCheck.Checked = settings.AutoEnterCharacterBySlot;
         autoEnterCheck.CheckedChanged += (_, _) => { settings.AutoEnterCharacterBySlot = autoEnterCheck.Checked; SaveSettings(); };
         top.Controls.Add(autoEnterCheck);
+        // The toolbar previously had room for only two rows, so the checkbox
+        // could be clipped below the visible area. Reserve a third row for it.
+        top.AutoSize = false;
+        top.Height = Math.Max(top.Height, 124);
+        top.MinimumSize = new Size(0, top.Height);
+        top.PerformLayout();
 '@
 Replace-Once $manager '                var form = new BrowserForm($"組別 {group.Name} - {slotName}", uri, env, id, slot,' @'
                 var form = new BrowserForm($"組別 {group.Name} - {slotName}", uri, env, id, slot,
