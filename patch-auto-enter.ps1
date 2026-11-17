@@ -26,9 +26,6 @@ Replace-Once $browser '        int slot,' @'
 Replace-Once $browser '        this.slot = slot;' @'
         this.slot = slot;
 '@
-Replace-Once $browser '        this.autoEnterCharacter = autoEnterCharacter;' @'
-        this.autoEnterCharacter = autoEnterCharacter;
-'@
 Replace-Once $browser '        await browser.EnsureCoreWebView2Async(environment);' @'
         await browser.EnsureCoreWebView2Async(environment);
         if (autoEnterCharacter && startUri.Host.EndsWith("ro-idle.app", StringComparison.OrdinalIgnoreCase) && slot >= 1 && slot <= 4)
