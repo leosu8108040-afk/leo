@@ -39,24 +39,54 @@ Replace-Once $browser '        await browser.EnsureCoreWebView2Async(environment
                   const targetIndex = {{slotJson}} - 1;
                   let finished = false;
                   const startedAt = Date.now();
+                  const normalize = value => String(value || '').replace(/\\s+/g, '').trim();
+                  const visible = el => {
+                    const rect = el.getBoundingClientRect();
+                    const style = window.getComputedStyle(el);
+                    return rect.width > 0 && rect.height > 0 &&
+                      style.display !== 'none' && style.visibility !== 'hidden' &&
+                      style.opacity !== '0';
+                  };
                   const tryEnter = () => {
-                    if (finished || Date.now() - startedAt > 300000) return;
-                    const selector = 'button, a, [role="button"], [onclick], input[type="button"], input[type="submit"]';
-                    // Avoid counting a button more than once when it matches multiple selectors.
-                    const candidates = Array.from(new Set(document.querySelectorAll(selector)));
-                    const enterButtons = candidates.filter(el => {
-                      const text = (el.innerText || el.textContent || el.value || el.getAttribute('aria-label') || el.getAttribute('title') || '').replace(/\\s+/g, '').trim();
-                      const rect = el.getBoundingClientRect();
-                      const style = window.getComputedStyle(el);
-                      return text === '進入' && rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0' && !el.disabled && el.getAttribute('aria-disabled') !== 'true';
+                    if (finished || Date.now() - startedAt > 1800000) return;
+                    // Game controls may be div/span elements without button attributes.
+                    const matches = Array.from(document.querySelectorAll('body *')).filter(el => {
+                      if (!visible(el)) return false;
+                      const label = normalize(el.innerText || el.textContent || el.value ||
+                        el.getAttribute('aria-label') || el.getAttribute('title'));
+                      return label === '進入';
                     });
-                    if (enterButtons.length > targetIndex) { finished = true; enterButtons[targetIndex].click(); }
+                    // Keep deepest matching text nodes; avoid counting nested wrappers repeatedly.
+                    const leaves = matches.filter(el => !Array.from(el.children).some(child =>
+                      visible(child) && normalize(child.innerText || child.textContent || child.value) === '進入'));
+                    // Deduplicate nested nodes that occupy the same screen position.
+                    const enterButtons = [];
+                    for (const el of leaves) {
+                      const r = el.getBoundingClientRect();
+                      const duplicate = enterButtons.some(other => {
+                        const q = other.getBoundingClientRect();
+                        return Math.abs(r.left - q.left) < 3 && Math.abs(r.top - q.top) < 3 &&
+                          Math.abs(r.width - q.width) < 3 && Math.abs(r.height - q.height) < 3;
+                      });
+                      if (!duplicate) enterButtons.push(el);
+                    }
+                    if (enterButtons.length > targetIndex) {
+                      const target = enterButtons[targetIndex];
+                      target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+                      target.click();
+                      finished = true;
+                      console.info('[MBGM] clicked slot ' + (targetIndex + 1) +
+                        '; controls=' + enterButtons.length + '; url=' + location.href);
+                    } else if (Date.now() - startedAt < 15000) {
+                      console.info('[MBGM] waiting slot=' + (targetIndex + 1) +
+                        '; found=' + enterButtons.length + '; url=' + location.href);
+                    }
                   };
                   const observer = new MutationObserver(tryEnter);
                   observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
                   const timer = window.setInterval(() => {
                     tryEnter();
-                    if (finished || Date.now() - startedAt > 300000) { window.clearInterval(timer); observer.disconnect(); }
+                    if (finished || Date.now() - startedAt > 1800000) { window.clearInterval(timer); observer.disconnect(); }
                   }, 1000);
                   tryEnter();
                 })();
