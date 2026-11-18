@@ -72,7 +72,6 @@ Replace-Once $browser '        await browser.EnsureCoreWebView2Async(environment
                     }
                     if (enterButtons.length > targetIndex) {
                       const target = enterButtons[targetIndex];
-                      target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
                       target.click();
                       finished = true;
                       console.info('[MBGM] clicked slot ' + (targetIndex + 1) +
