@@ -160,7 +160,8 @@ Replace-Once $manager '    private void TileOneGroup()' @'
         RefreshGrid();
     }
 
-    private void TileOneGroup()'@
+    private void TileOneGroup()
+'@
 
 Replace-Once $manager 'HeaderText = "組別編號", DataPropertyName = "Name"' 'HeaderText = "組別名稱（可自訂）", DataPropertyName = "Name"'
 
