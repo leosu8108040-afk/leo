@@ -41,7 +41,9 @@ Replace-Once $browser '        await browser.EnsureCoreWebView2Async(environment
                   const startedAt = Date.now();
                   const tryEnter = () => {
                     if (finished || Date.now() - startedAt > 300000) return;
-                    const candidates = Array.from(document.querySelectorAll('button, a, [role="button"], [onclick], input[type="button"], input[type="submit"]'));
+                    const selector = 'button, a, [role="button"], [onclick], input[type="button"], input[type="submit"]';
+                    // Avoid counting a button more than once when it matches multiple selectors.
+                    const candidates = Array.from(new Set(document.querySelectorAll(selector)));
                     const enterButtons = candidates.filter(el => {
                       const text = (el.innerText || el.textContent || el.value || el.getAttribute('aria-label') || el.getAttribute('title') || '').replace(/\\s+/g, '').trim();
                       const rect = el.getBoundingClientRect();
@@ -67,6 +69,12 @@ Replace-Once $browser '        await browser.EnsureCoreWebView2Async(environment
                 try { await browser.CoreWebView2.ExecuteScriptAsync(script); }
                 catch { /* Navigation may have been replaced while the script was being installed. */ }
             };
+            // The game may render the character list inside an iframe.
+            browser.CoreWebView2.FrameCreated += (_, e) =>
+            {
+                try { _ = e.Frame.ExecuteScriptAsync(script); }
+                catch { /* The frame may be disposed during navigation. */ }
+            };
         }
 '@
 
@@ -75,6 +83,11 @@ Replace-Once $manager '    private readonly Label status = new();' @'
     private readonly Label status = new();
     private readonly CheckBox autoEnterCheck = new() { Text = "登入後依視窗編號自動進入角色", AutoSize = true, Margin = new Padding(8, 8, 4, 0) };
 '@
+Replace-Once $manager '        AddButton(top, "編輯角色名稱", EditSlotNames);' @'
+        AddButton(top, "編輯角色名稱", EditSlotNames);
+        AddButton(top, "修改組別名稱", RenameGroup);
+'@
+
 Replace-Once $manager '        AddButton(top, "全部關閉", StopAll);' @'
         AddButton(top, "全部關閉", StopAll);
         autoEnterCheck.Checked = settings.AutoEnterCharacterBySlot;
@@ -97,4 +110,58 @@ Replace-Once $manager '        settings.StartUrl = urlBox.Text.Trim();' @'
         settings.AutoEnterCharacterBySlot = autoEnterCheck.Checked;
 '@
 
-Write-Host 'Auto-enter feature patch applied.'
+Replace-Once $manager '    private void TileOneGroup()' @'
+    private void RenameGroup()
+    {
+        var ids = SelectedIds();
+        if (ids.Count != 1)
+        {
+            MessageBox.Show("請只選取一個組別，再修改名稱。");
+            return;
+        }
+        var group = settings.Groups.FirstOrDefault(g => g.Id == ids[0]);
+        if (group == null) return;
+
+        using var dialog = new Form
+        {
+            Text = "修改組別名稱",
+            Width = 380,
+            Height = 155,
+            StartPosition = FormStartPosition.CenterParent,
+            FormBorderStyle = FormBorderStyle.FixedDialog,
+            MaximizeBox = false,
+            MinimizeBox = false
+        };
+        var label = new Label { Text = "組別名稱（可輸入中文）", AutoSize = true, Left = 14, Top = 16 };
+        var editor = new TextBox { Left = 14, Top = 42, Width = 335, MaxLength = 24, Text = group.Name };
+        var save = new Button { Text = "儲存", Left = 188, Top = 78, Width = 75, DialogResult = DialogResult.OK };
+        var cancel = new Button { Text = "取消", Left = 274, Top = 78, Width = 75, DialogResult = DialogResult.Cancel };
+        dialog.Controls.AddRange(new Control[] { label, editor, save, cancel });
+        dialog.AcceptButton = save;
+        dialog.CancelButton = cancel;
+        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+
+        var newName = editor.Text.Trim();
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            MessageBox.Show("組別名稱不能空白。");
+            return;
+        }
+        if (settings.Groups.Any(g => g.Id != group.Id && string.Equals(g.Name, newName, StringComparison.OrdinalIgnoreCase)))
+        {
+            MessageBox.Show("這個組別名稱已經使用，請換一個名稱。");
+            return;
+        }
+        group.Name = newName;
+        if (running.TryGetValue(group.Id, out var forms))
+            foreach (var form in forms.Where(f => !f.IsDisposed))
+                form.Text = $"組別 {group.Name} - {GetSlotName(group, form.SlotNumber)}";
+        SaveSettings();
+        RefreshGrid();
+    }
+
+    private void TileOneGroup()'@
+
+Replace-Once $manager 'HeaderText = "組別編號", DataPropertyName = "Name"' 'HeaderText = "組別名稱（可自訂）", DataPropertyName = "Name"'
+
+Write-Host 'Auto-enter and custom group-name patches applied.'
