@@ -39,7 +39,7 @@ Replace-Once $browser '        await browser.EnsureCoreWebView2Async(environment
                   const targetIndex = {{slotJson}} - 1;
                   let finished = false;
                   const startedAt = Date.now();
-                  const normalize = value => String(value || '').replace(/\\s+/g, '').trim();
+                  const normalize = value => String(value || '').replace(/\s+/g, '').trim();
                   const visible = el => {
                     const rect = el.getBoundingClientRect();
                     const style = window.getComputedStyle(el);
